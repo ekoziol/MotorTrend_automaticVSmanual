@@ -1,0 +1,38 @@
+# How to Automatically Know if your Gas Mileage needs a Manual Takeover
+#### An exploration into the difference in miles per gallon of manaul vs automatic transmissions
+
+### Summary
+Blah blah blah
+blah blah blah
+blah blah blah
+
+### Which transmission type is better for miles per gallon?
+The age old struggle of which transmission type is better, automatic or manual, is an age old struggle that we here at *Motor Trend* do not take lightly.  We are here to take you on a journey examining which transmission is ultimately the best for getting the most from your dollar per mile traveled.  Get ready to dive in becasue you are in for a ride!
+
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(lattice)
+
+data(mtcars)
+data <- mtcars
+data$am[data$am == 0] <- "automatic"
+data$am[data$am == 1] <- "manual"
+auto <- data[data$am == "automatic",]
+manual <- data[data$am == "manual",]
+
+
+ggplot(data, aes(x=mpg, color=am)) + geom_density() + scale_colour_discrete(name = "Transmission Type") + ggtitle("Figure 1. Density plot of MPG by transmission type")
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
