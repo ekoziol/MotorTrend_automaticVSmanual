@@ -1,19 +1,3 @@
-# How to Automatically Know if your Gas Mileage needs a Manual Takeover
-#### An exploration into the difference in miles per gallon of manaul vs automatic transmissions
-
-### Summary
-Blah blah blah
-blah blah blah
-blah blah blah
-
-### Which transmission type is better for miles per gallon?
-The age old struggle of which transmission type is better, automatic or manual, is an age old struggle that we here at *Motor Trend* do not take lightly.  We are here to take you on a journey examining which transmission is ultimately the best for getting the most from your dollar per mile traveled.  Get ready to dive in becasue you are in for a ride!
-
-Let's take an initial look at the data of the current cars on the market grouped by transmission.  Figure 1 is a plot of the percentage of cars of a given transmission type vs a given MPG rating.  At first glance it would appear that on average, automatic transmission cars have a MPG rating of ~18 MPG while manual tranmsission cars have an average rating of ~22 MPG.  However, could there be other variables affecting this average?
-
-One of the factors that contributes the most to the MPG rating of cars is the engine.  The plot in Figure 2 shows three individual plots of MPG vs horsepower broken up by 4, 6 and 8 cylinder cars.  One would expect lower cylinder engine cars to have better gas mileage becasuse they require less gas to run.  This is confirmed by the plot in Figure 2 which shows a negative relationship between mpg and cylinder count.  What is interesting to note in this data set is that a majority of the automatic cars are of the eight cylinder variety while a majority of the manual cars are of four cylinders!  This relationship clearly skews our initial look from the density plot in Figure 1.  Clearly, if the manual group has more cars with less cylinders the average gas mileage will go up and if a majority of automatic cars have higher cylinder engines we would expect the gas mileage to go down.  We have found some confounding variables that we need to control for.
-
-
 ```{r, echo=FALSE}
 library(ggplot2)
 library(lattice)
@@ -26,19 +10,53 @@ auto <- data[data$am == "automatic",]
 manual <- data[data$am == "manual",]
 data$ev <- data$hp * data$cyl * data$wt
 
+data$hpcyl <- data$hp * data$cyl
+lmA <- lm(mpg~hpcyl, data[data$am == "automatic",])
+lmM <- lm(mpg~hpcyl, data[data$am == "manual",])
+```
+
+# How to Automatically Know if your Gas Mileage needs a Manual Takeover
+#### An exploration into the difference in miles per gallon of manaul vs automatic transmissions
+
+### Summary
+At first glance it appears that the average miles per gallon of manual transmission cars is slightly larger than automatic transmission cars.  However, upon further investigation it appears that there are some confounding variables from the engine size.  Once we control for these factors, we see that manual cars have on average **approximately 5 MPG more than automatic cars.**
+
+### Which transmission type is better for miles per gallon?
+The age old struggle of which transmission type is better, automatic or manual, is an age old struggle that we here at *Motor Trend* do not take lightly.  We are here to take you on a journey examining which transmission is ultimately the best for getting the most from your dollar per mile traveled.  Get ready to dive in becasue you are in for a ride!
+
+Let's take an initial look at the data of the current cars on the market grouped by transmission.  Figure 1 is a plot of the percentage of cars of a given transmission type vs a given MPG rating.  At first glance it would appear that on average, automatic transmission cars have a MPG rating of ~18 MPG while manual tranmsission cars have an average rating of ~22 MPG, which is a difference of about 4 MPG.  However, could there be other variables affecting this average?
+
+One of the factors that contributes the most to the MPG rating of cars is the engine.  The plot in Figure 2 shows three individual plots of MPG vs horsepower broken up by 4, 6 and 8 cylinder cars.  One would expect lower cylinder engine cars to have better gas mileage becasuse they require less gas to run.  This is confirmed by the plot in Figure 2 which shows a negative relationship between mpg and cylinder count.  What is interesting to note in this data set is that a majority of the automatic cars are of the eight cylinder variety while a majority of the manual cars are of four cylinders!  This relationship clearly skews our initial look from the density plot in Figure 1.  Clearly, if the manual group has more cars with less cylinders the average gas mileage will go up and if a majority of automatic cars have higher cylinder engines we would expect the gas mileage to go down.  We have found some confounding variables that we need to control for.
+
+Since the horsepower and the number of cylinders are both inversely proportional to the miles per gallon rating, let us define a variable that combines the two.  We will call the variable hpcyl and it will be defined as hpcyl = horsepower * number of cylinders.  Figure 3 shows a plot of hpcyl vs MPG.  From this figure we can see that our variable hpcyl creates a good spread of the data along the x-axis, such that given an x value you could not determine whether the car was automatic or manual.  There is also a clear treatment effect between the two groups which is given by a spread of the two regression lines.
+
+This choice of model that controls for the engine is much better than taking the model that is just based on the average of all the cars for a given transmission type.  Let us look at the residuals of each car type to confirm that our model is a fairly good one.  We can see the plot of the manual residuals in Figure 4 and a plot of the automatic residuals in Figure 5.  As we can see from the Normal Q-Q for both the manual and automatic cars, the model fits the theoretical quantiles fairly well.  The residuals vs fitted plots show the the automatic model fits slightly better than the manual model but they both fit fairly well.  We can see that both a still affected by concentrations of data that could be fixed by obtaining more data.
+
+If we look at the P values for these models we can see that for the manual transmission the P value is `r summary(lmM)$coeff[2,4]` and the automatic transmission P value is `r summary(lmA)$coeff[2,4]`.  These P values are very small which gives us a high degree of confidence in our results.  The slopes of each model are given as `r summary(lmM)$coeff[2,1]` for manual and `r summary(lmA)$coeff[2,1]` for automatic.  Since the slopes are close to the same value we can take the intercepts as a blanket estimate for the difference between the two models.  This results in a difference in `r summary(lmM)$coeff[1,1]` - `r summary(lmA)$coeff[1,1]` = `r summary(lmM)$coeff[1,1] - summary(lmA)$coeff[1,1]` MPG.  Therefore with a high degree of confidence (due to extremely low P-values) we can say that on average manual transmission cars have approximately **`r summary(lmM)$coeff[1,1] - summary(lmA)$coeff[1,1]` more MPG than automatic transmission cars.**
+
+
+## Appendix
+```{r, echo=FALSE, fig.width=7, fig.height=5}
+
 ggplot(data, aes(x=mpg, color=am)) + geom_density() + scale_colour_discrete(name = "Transmission Type") + ggtitle("Figure 1. Density plot of MPG by transmission type")
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,fig.width=7, fig.height=4}
 xyplot(mpg ~ hp | cyl, data, group=am, main = "Figure 2. Horsepower vs MPG by Cylinder Count", auto.key = list(title = "Type", 
                 x = .75, y=1, corner = c(0,2), 
                 border = TRUE, lines = FALSE))
 ```
 
-```{r, echo=FALSE}
-
+```{r, echo=FALSE, fig.width=7, fig.height=4}
+data$hpcyl <- data$hp * data$cyl
+qplot(hpcyl, mpg, data=data, col = am) +  geom_smooth(method='lm',formula=y~x) + ggtitle("Figure 3. Regression fits of hpcyl vs MPG by Transmission Type")
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width=5, fig.height=4}
+lmA <- lm(mpg~hpcyl, data[data$am == "automatic",])
+lmM <- lm(mpg~hpcyl, data[data$am == "manual",])
 
+par(mfrow=c(2,2))
+plot(lmM); mtext("Figure 4. Manual Residuals", side = 3, line = -2, outer = TRUE) 
+plot(lmA); mtext("Figure 5. Automatic Residuals", side = 3, line = -2, outer = TRUE) 
 ```
